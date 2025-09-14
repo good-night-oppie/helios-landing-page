@@ -1,6 +1,6 @@
 {
   "name": "helios-landing-page",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Helios Parallel Universe Engine - Premium Landing Page with Demo Access Control",
   "private": true,
   "dependencies": {
