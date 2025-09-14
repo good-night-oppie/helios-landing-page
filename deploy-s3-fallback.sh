@@ -1,92 +1,61 @@
 #!/bin/bash
-
-# Emergency S3 Deployment Fallback Script
-# Use this if AWS Amplify deployment fails
+# Emergency S3 deployment script for demo
+# Usage: ./deploy-s3-fallback.sh
 
 set -e
 
-BUCKET_NAME="helios-landing-fallback"
-REGION="us-east-1"
-DISTRIBUTION_ID=""  # CloudFront distribution ID (if applicable)
+echo "🚨 EMERGENCY S3 DEPLOYMENT FOR DEMO 🚨"
 
-echo "🚨 EMERGENCY S3 DEPLOYMENT STARTING..."
-
-# Ensure build directory exists and is complete
+# Check if build exists
 if [ ! -d "build" ]; then
-    echo "❌ Build directory not found. Running npm run build..."
+    echo "Building project..."
     npm run build
 fi
 
-# Verify critical files exist
-if [ ! -f "build/index.html" ]; then
-    echo "❌ index.html not found in build directory"
-    exit 1
-fi
+# Create bucket name with timestamp
+BUCKET_NAME="helios-demo-$(date +%s)"
+REGION="us-east-1"
 
-if [ ! -f "build/static/js/main.d7865a3f.js" ]; then
-    echo "❌ Main JS file not found. Re-running build..."
-    rm -rf build/
-    npm run build
-fi
+echo "Creating S3 bucket: $BUCKET_NAME"
 
-echo "✅ Build verification complete"
+# Create bucket
+aws s3api create-bucket --bucket $BUCKET_NAME --region $REGION || {
+    echo "Failed to create bucket, trying with different name..."
+    BUCKET_NAME="helios-emergency-$(openssl rand -hex 4)"
+    aws s3api create-bucket --bucket $BUCKET_NAME --region $REGION
+}
 
-# Create S3 bucket if it doesn't exist
-echo "📦 Creating S3 bucket: $BUCKET_NAME"
-aws s3 mb s3://$BUCKET_NAME --region $REGION 2>/dev/null || echo "Bucket already exists"
-
-# Configure bucket for static website hosting
-aws s3 website s3://$BUCKET_NAME --index-document index.html --error-document index.html
-
-# Upload files with proper MIME types
-echo "🚀 Uploading files to S3..."
-aws s3 sync build/ s3://$BUCKET_NAME \
-    --delete \
-    --region $REGION \
-    --metadata-directive REPLACE \
-    --cache-control "public, max-age=86400" \
-    --exclude "*.map"
-
-# Set proper MIME types for JS and CSS
-aws s3 cp build/static/js/ s3://$BUCKET_NAME/static/js/ \
-    --recursive \
-    --content-type "application/javascript" \
-    --cache-control "public, max-age=31536000"
-
-aws s3 cp build/static/css/ s3://$BUCKET_NAME/static/css/ \
-    --recursive \
-    --content-type "text/css" \
-    --cache-control "public, max-age=31536000"
-
-# Make bucket publicly readable
-aws s3api put-bucket-policy --bucket $BUCKET_NAME --policy '{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "PublicReadGetObject",
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::'$BUCKET_NAME'/*"
-        }
-    ]
+# Enable static website hosting
+aws s3api put-bucket-website --bucket $BUCKET_NAME --website-configuration '{
+    "IndexDocument": {"Suffix": "index.html"},
+    "ErrorDocument": {"Key": "index.html"}
 }'
 
-# Get the website URL
+# Set bucket policy for public read
+aws s3api put-bucket-policy --bucket $BUCKET_NAME --policy '{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Sid": "PublicReadGetObject",
+        "Effect": "Allow",
+        "Principal": "*",
+        "Action": "s3:GetObject",
+        "Resource": "arn:aws:s3:::'$BUCKET_NAME'/*"
+    }]
+}'
+
+# Upload files
+echo "Uploading build files..."
+aws s3 sync build/ s3://$BUCKET_NAME/ --delete
+
+# Get website URL
 WEBSITE_URL="http://$BUCKET_NAME.s3-website-$REGION.amazonaws.com"
 
 echo "✅ DEPLOYMENT COMPLETE!"
 echo "🌐 Website URL: $WEBSITE_URL"
-echo ""
-echo "📋 Next steps if needed:"
-echo "1. Update DNS to point to: $WEBSITE_URL"
-echo "2. Set up CloudFront for HTTPS and better performance"
-echo "3. Configure custom domain"
+echo "📝 Bucket: $BUCKET_NAME"
 
-# Invalidate CloudFront cache if distribution exists
-if [ ! -z "$DISTRIBUTION_ID" ]; then
-    echo "♻️  Invalidating CloudFront cache..."
-    aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
-fi
+# Test the deployment
+echo "Testing deployment..."
+curl -I "$WEBSITE_URL" || echo "⚠️ Site may take a moment to be available"
 
-echo "🎯 EMERGENCY DEPLOYMENT READY FOR DEMO!"
+echo "🎯 DEMO URL READY: $WEBSITE_URL"
