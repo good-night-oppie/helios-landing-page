@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/helios-landing-page/static/css/main.e1e59b4d.css",
-    "main.js": "/helios-landing-page/static/js/main.2110b988.js",
+    "main.js": "/helios-landing-page/static/js/main.eea0e112.js",
     "index.html": "/helios-landing-page/index.html",
     "main.e1e59b4d.css.map": "/helios-landing-page/static/css/main.e1e59b4d.css.map",
-    "main.2110b988.js.map": "/helios-landing-page/static/js/main.2110b988.js.map"
+    "main.eea0e112.js.map": "/helios-landing-page/static/js/main.eea0e112.js.map"
   },
   "entrypoints": [
     "static/css/main.e1e59b4d.css",
-    "static/js/main.2110b988.js"
+    "static/js/main.eea0e112.js"
   ]
 }
