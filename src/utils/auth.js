@@ -331,13 +331,7 @@ export const DEMO_CODES = {
  * @returns {string} Complete demo URL with auth parameters
  */
 export const getDemoUrl = (accessCode, session) => {
-  const demoBaseUrl = process.env.REACT_APP_DEMO_URL || 'https://demo.helios.oppie.xyz';
-  const authToken = btoa(JSON.stringify({
-    code: accessCode,
-    expires: session.expiresAt,
-    permissions: session.permissions,
-    timestamp: Date.now()
-  }));
-
-  return `${demoBaseUrl}?access_code=${accessCode}&session_token=${authToken}`;
+  // Return the backend API base URL - frontend dashboard handles API calls internally
+  const demoBaseUrl = process.env.REACT_APP_DEMO_URL || 'https://p8m2dfvub9.us-east-2.awsapprunner.com';
+  return demoBaseUrl;
 };

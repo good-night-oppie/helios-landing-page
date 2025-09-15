@@ -100,11 +100,9 @@ const App = () => {
   const getDemoUrl = () => {
     if (!userSession) return '#';
 
-    const demoBaseUrl = process.env.REACT_APP_DEMO_URL || 'https://demo.helios.oppie.xyz';
-    return `${demoBaseUrl}?access_code=${userSession.accessCode}&session_token=${btoa(JSON.stringify({
-      code: userSession.accessCode,
-      expires: userSession.expiresAt
-    }))}`;
+    // Now returns the backend API base URL since dashboard handles API calls internally
+    const demoBaseUrl = process.env.REACT_APP_DEMO_URL || 'https://p8m2dfvub9.us-east-2.awsapprunner.com';
+    return demoBaseUrl;
   };
 
   if (loading) {

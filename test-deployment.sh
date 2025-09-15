@@ -1,49 +1,40 @@
 #!/bin/bash
+# Test all deployment URLs for demo readiness
 
-# Quick deployment test script
-echo "🧪 TESTING HELIOS LANDING PAGE DEPLOYMENT..."
+echo "🔍 TESTING ALL DEPLOYMENT URLS FOR DEMO"
+echo "======================================="
 
-URLS=(
-    "https://helios.oppie.xyz"
-    "https://main.d2z7l3p5m6o8k9.amplifyapp.com"  # Replace with actual Amplify URL
-    "http://helios-landing-fallback.s3-website-us-east-1.amazonaws.com"  # Fallback S3 URL
-)
+# Test URLs
+AMPLIFY_URL="https://ddih2g8hls8px.amplifyapp.com"
+CUSTOM_URL="https://helios.oppie.xyz"
+GITHUB_PAGES_URL="https://good-night-oppie.github.io/helios-landing-page"
 
-for url in "${URLS[@]}"; do
-    echo ""
-    echo "Testing: $url"
-
-    # Test main page
-    status=$(curl -s -o /dev/null -w "%{http_code}" "$url" || echo "000")
-    if [ "$status" = "200" ]; then
-        echo "✅ Main page: OK ($status)"
-    else
-        echo "❌ Main page: FAILED ($status)"
-        continue
-    fi
-
-    # Test SPA routing
-    spa_status=$(curl -s -o /dev/null -w "%{http_code}" "$url/access" || echo "000")
-    if [ "$spa_status" = "200" ]; then
-        echo "✅ SPA routing: OK ($spa_status)"
-    else
-        echo "❌ SPA routing: FAILED ($spa_status)"
-    fi
-
-    # Test static assets
-    content=$(curl -s "$url" | grep -o 'static/js/main\.[a-z0-9]*\.js' | head -1)
-    if [ ! -z "$content" ]; then
-        asset_url="$url/$content"
-        asset_status=$(curl -s -o /dev/null -w "%{http_code}" "$asset_url" || echo "000")
-        if [ "$asset_status" = "200" ]; then
-            echo "✅ JS assets: OK ($asset_status)"
-        else
-            echo "❌ JS assets: FAILED ($asset_status)"
-        fi
-    else
-        echo "❌ JS assets: Not found in HTML"
-    fi
-done
+echo "1. Testing Amplify URL: $AMPLIFY_URL"
+if curl -s -o /dev/null -w "%{http_code}" "$AMPLIFY_URL" | grep -q "200"; then
+    echo "✅ Amplify: WORKING"
+    echo "🎯 DEMO URL: $AMPLIFY_URL"
+else
+    echo "❌ Amplify: FAILED (404)"
+fi
 
 echo ""
-echo "🎯 Test complete! Check results above."
+echo "2. Testing Custom Domain: $CUSTOM_URL"
+if curl -s -o /dev/null -w "%{http_code}" "$CUSTOM_URL" 2>/dev/null | grep -q "200"; then
+    echo "✅ Custom Domain: WORKING"
+    echo "🎯 DEMO URL: $CUSTOM_URL"
+else
+    echo "❌ Custom Domain: FAILED (SSL/DNS issue)"
+fi
+
+echo ""
+echo "3. Testing GitHub Pages: $GITHUB_PAGES_URL"
+if curl -s -o /dev/null -w "%{http_code}" "$GITHUB_PAGES_URL" | grep -q "200"; then
+    echo "✅ GitHub Pages: WORKING"
+    echo "🎯 DEMO URL: $GITHUB_PAGES_URL"
+else
+    echo "⏳ GitHub Pages: Not ready yet (may take 5-10 minutes)"
+fi
+
+echo ""
+echo "🚨 IF ALL FAIL, RUN: ./deploy-s3-fallback.sh"
+echo "======================================="

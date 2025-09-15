@@ -51,7 +51,7 @@
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
   },
-  "homepage": "https://helios.oppie.xyz",
+  "homepage": "https://good-night-oppie.github.io/helios-landing-page",
   "repository": {
     "type": "git",
     "url": "https://github.com/EdwardTang/helios-landing-page.git"
